@@ -1,0 +1,7 @@
+import { useId } from 'react'
+
+/** Scalable orbital processor emblem used for the assistant and small UI surfaces. */
+export default function ScienceMark({className=''}:{className?:string}){
+ const id=useId().replace(/:/g,'')
+ return <svg className={`science-mark ${className}`} viewBox="0 0 80 80" fill="none" aria-hidden="true"><defs><linearGradient id={`${id}metal`} x1="13" y1="8" x2="65" y2="75" gradientUnits="userSpaceOnUse"><stop stopColor="#e7fbff"/><stop offset=".35" stopColor="#8be9ff"/><stop offset=".6" stopColor="#3585b2"/><stop offset="1" stopColor="#a3ffe5"/></linearGradient><linearGradient id={`${id}glass`} x1="20" y1="15" x2="60" y2="68" gradientUnits="userSpaceOnUse"><stop stopColor="#243d60"/><stop offset="1" stopColor="#07111e"/></linearGradient></defs><path d="M40 5 70 22v36L40 75 10 58V22Z" fill={`url(#${id}glass)`} stroke={`url(#${id}metal)`} strokeWidth="2"/><path d="m40 12 24 14v28L40 68 16 54V26Z" stroke="#6edfff" strokeOpacity=".25"/><ellipse cx="40" cy="40" rx="34" ry="13" transform="rotate(-35 40 40)" stroke={`url(#${id}metal)`} strokeWidth="2.3"/><rect x="26" y="26" width="28" height="28" rx="9" fill="#102940" stroke="#93edff" strokeWidth="1.5"/><path d="M32 37h3m10 0h3M34 45q6 5 12 0M40 20v6m0 28v6M20 40h6m28 0h6" stroke="#b8f9ff" strokeWidth="2.4" strokeLinecap="round"/><circle cx="64" cy="20" r="4" fill="#b6ffe8"/><circle cx="17" cy="59" r="2.5" fill="#64bfff"/></svg>
+}

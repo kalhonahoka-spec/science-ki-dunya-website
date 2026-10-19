@@ -1,0 +1,32 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
+}
+
+model PodcastJob {
+  id         String             @id
+  settings   Json
+  status     String
+  error      String?
+  scripts    Json
+  totalParts Int                @default(0)
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+  audioParts PodcastAudioPart[]
+}
+
+model PodcastAudioPart {
+  id        String     @id @default(cuid())
+  jobId     String
+  partIndex Int
+  audioData Bytes
+  createdAt DateTime   @default(now())
+  job       PodcastJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, partIndex])
+}
