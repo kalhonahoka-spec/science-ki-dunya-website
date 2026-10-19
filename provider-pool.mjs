@@ -7,20 +7,18 @@ export function providerKeys(provider){
 export function resetPool(){cooldowns.clear()}
 export async function providerFetch(provider,url,options){
  const keys=providerKeys(provider),header=provider==='gemini'?'x-goog-api-key':'xi-api-key'
- // Search has its own quota. A failed search must not temporarily disable ordinary chat.
  const scope=provider==='gemini'&&String(options.body||'').includes('"google_search"')?'search':'standard'
  let last,limited
  for(const key of keys){
   const id=createHash('sha256').update(provider+key).digest('hex')
   if((cooldowns.get(id)||0)>Date.now()||(cooldowns.get(id+scope)||0)>Date.now())continue
-  // Network failures and ambiguous server failures are not retried: the request may have been processed.
   const response=await fetch(url,{...options,headers:{...options.headers,[header]:key}})
   if(response.ok)return response
   let detail=''
   try{const body=await response.clone().json();detail=body.detail?.status||body.error?.status||''}catch{}
   const quota=detail==='quota_exceeded'
   if(response.status===429||quota)limited=response.status===429?response:new Response(JSON.stringify({error:{status:'RESOURCE_EXHAUSTED'}}),{status:429,headers:{'Content-Type':'application/json'}})
-  const invalid=(response.status===401&&['invalid_api_key','invalid_token'].includes(detail))||(provider==='gemini'&&response.status===403&&detail==='PERMISSION_DENIED')
+  const invalid=response.status===401||response.status===403
   if(response.status!==429&&!quota&&!invalid)return response
   const retry=response.headers.get('retry-after')
   const seconds=retry?(Number.isFinite(Number(retry))?Number(retry):Math.max(0,(Date.parse(retry)-Date.now())/1000)):60
