@@ -327,7 +327,7 @@ export function createPodcastStore(directory, { script, audio }) {
 }
 
 async function script(settings, index, count, previous) {
-  const model = process.env.GEMINI_MODEL
+  const model = process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite'
   if (!providerKeys('gemini').length || !model || !/^[a-zA-Z0-9._-]+$/.test(model))
     throw new Error('Configure a valid Gemini model and API key first.')
   const words = Math.round((settings.minutes * 135) / count)

@@ -51,7 +51,7 @@ async function readBody(req) {
 
 async function generate(data) {
   const key = providerKeys('gemini')[0],
-    model = process.env.GEMINI_MODEL || 'gemini-2.5-flash'
+    model = process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite'
   if (!key || !model)
     return {
       status: 503,
@@ -195,7 +195,7 @@ export async function handleRequest(req, res) {
   }
   if (pathname === '/api/status' && req.method === 'GET')
     return json(res, 200, {
-      gemini: !!(providerKeys('gemini')[0] && (process.env.GEMINI_MODEL || 'gemini-2.5-flash')),
+      gemini: !!(providerKeys('gemini')[0] && (process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite')),
       elevenlabs: !!(providerKeys('elevenlabs')[0] && (process.env.ELEVENLABS_VOICE_ID || 'k7nOSUCadIEwB6fdJmbw')),
       database: Boolean(process.env.DATABASE_URL),
       audioCharactersRemaining: Math.max(0, maxChars - speechCharacters),
