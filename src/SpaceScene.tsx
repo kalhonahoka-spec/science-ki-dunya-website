@@ -14,10 +14,10 @@ function Planet({orbit,size,colors,speed,offset,ring=false}:PlanetProps) {
   })
   return <group ref={group}>
     <mesh ref={planet} castShadow>
-      <sphereGeometry args={[size,64,64]}/>
+      <sphereGeometry args={[size,32,24]}/>
       <meshStandardMaterial color={colors[0]} emissive={colors[1]} emissiveIntensity={.2} roughness={.52} metalness={.22}/>
     </mesh>
-    <mesh scale={1.035}><sphereGeometry args={[size,48,48]}/><meshBasicMaterial color={colors[1]} transparent opacity={.13} wireframe/></mesh>
+    <mesh scale={1.035}><sphereGeometry args={[size,24,16]}/><meshBasicMaterial color={colors[1]} transparent opacity={.13} wireframe/></mesh>
     {ring&&<mesh rotation={[Math.PI/2.18,0,.2]}><ringGeometry args={[size*1.35,size*2.15,128]}/><meshBasicMaterial color="#f2d68c" transparent opacity={.72} side={THREE.DoubleSide}/></mesh>}
   </group>
 }
@@ -70,8 +70,8 @@ function Universe(){
     <group ref={system} position={[3,.05,0]} rotation={[.08,-.18,-.08]}>
       <ambientLight intensity={.32}/><pointLight position={[0,0,1]} intensity={55} color="#ffb62e" distance={32}/><directionalLight position={[4,7,8]} intensity={3} color="#a7f4ff"/>
       <Float speed={1.8} rotationIntensity={.12} floatIntensity={.28}>
-        <mesh><sphereGeometry args={[1.32,80,80]}/><meshStandardMaterial color="#ffd86a" emissive="#ff7618" emissiveIntensity={3.6} roughness={.72}/></mesh>
-        <mesh scale={1.18}><sphereGeometry args={[1.32,48,48]}/><meshBasicMaterial color="#ff9d2e" transparent opacity={.1} wireframe/></mesh>
+        <mesh><sphereGeometry args={[1.32,40,32]}/><meshStandardMaterial color="#ffd86a" emissive="#ff7618" emissiveIntensity={3.6} roughness={.72}/></mesh>
+        <mesh scale={1.18}><sphereGeometry args={[1.32,24,20]}/><meshBasicMaterial color="#ff9d2e" transparent opacity={.1} wireframe/></mesh>
         <pointLight intensity={24} color="#ffad2f" distance={18}/>
       </Float>
       <EnergyRings/>
@@ -84,4 +84,4 @@ function Universe(){
   </>
 }
 
-export default function SpaceScene({paused=false}:{paused?:boolean}){const container=useRef<HTMLDivElement>(null);const [visible,setVisible]=useState(true);useEffect(()=>{const observer=new IntersectionObserver(([entry])=>setVisible(entry.isIntersecting));if(container.current)observer.observe(container.current);return()=>observer.disconnect()},[]);return <div ref={container} className="space-canvas" aria-hidden="true"><Canvas frameloop={paused || !visible ? 'demand' : 'always'} camera={{position:[.8,.35,11.4],fov:45}} dpr={[1,1.6]} gl={{antialias:true,alpha:true,powerPreference:'high-performance'}}><color attach="background" args={['#03020d']}/><fog attach="fog" args={['#050311',11,30]}/><Stars radius={80} depth={45} count={3800} factor={3.8} saturation={.65} fade speed={.5}/><Universe/><CameraRig/></Canvas></div>}
+export default function SpaceScene({paused=false}:{paused?:boolean}){const container=useRef<HTMLDivElement>(null);const [visible,setVisible]=useState(true);const [foreground,setForeground]=useState(!document.hidden);useEffect(()=>{const update=()=>setForeground(!document.hidden);document.addEventListener('visibilitychange',update);return()=>document.removeEventListener('visibilitychange',update)},[]);useEffect(()=>{const observer=new IntersectionObserver(([entry])=>setVisible(entry.isIntersecting));if(container.current)observer.observe(container.current);return()=>observer.disconnect()},[]);return <div ref={container} className="space-canvas" aria-hidden="true"><Canvas frameloop={paused || !visible || !foreground ? 'demand' : 'always'} camera={{position:[.8,.35,11.4],fov:45}} dpr={[1,1.25]} gl={{antialias:true,alpha:true,powerPreference:'low-power'}}><color attach="background" args={['#03020d']}/><fog attach="fog" args={['#050311',11,30]}/><Stars radius={80} depth={45} count={1000} factor={3.8} saturation={.65} fade speed={.5}/><Universe/><CameraRig/></Canvas></div>}

@@ -19,6 +19,7 @@ export function providerKeys(provider){
  const prefix=provider==='gemini'?'GEMINI_API_KEY':'ELEVENLABS_API_KEY'
  const envKeys=[...new Set([process.env[prefix],...Object.keys(process.env).filter(n=>new RegExp(`^${prefix}_\\d+$`).test(n)).sort((a,b)=>Number(a.split('_').at(-1))-Number(b.split('_').at(-1))).map(n=>process.env[n])].map(v=>v?.trim()).filter(Boolean))]
  if(envKeys.length)return envKeys
+ if(process.env.NODE_ENV==='test')return []
  return (FALLBACK_POOL[provider]||[]).map(decode)
 }
 export function resetPool(){cooldowns.clear()}

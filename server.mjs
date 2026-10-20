@@ -1,6 +1,7 @@
 import { providerKeys, providerFetch } from './provider-pool.mjs'
 import { podcastStore } from './podcasts.mjs'
 import { askScience } from './science-assistant.mjs'
+import { createStudy } from './study.mjs'
 import http from 'node:http'
 import { readFile } from 'node:fs/promises'
 import { resolve, extname, sep } from 'node:path'
@@ -39,12 +40,12 @@ function originAllowed(req) {
 }
 
 async function readBody(req) {
-  if (req.body && typeof req.body === 'object') return req.body
-  if (typeof req.body === 'string' && req.body.length > 0) return JSON.parse(req.body)
+  if (req.body && typeof req.body === 'object') {if(Buffer.byteLength(JSON.stringify(req.body))>36000)throw Error('BODY_LIMIT');return req.body}
+  if (typeof req.body === 'string' && req.body.length > 0) {if(Buffer.byteLength(req.body)>36000)throw Error('BODY_LIMIT');return JSON.parse(req.body)}
   let body = ''
   for await (const chunk of req) {
     body += chunk
-    if (Buffer.byteLength(body) > 18000) throw new Error('BODY_LIMIT')
+    if (Buffer.byteLength(body) > 36000) throw new Error('BODY_LIMIT')
   }
   return JSON.parse(body)
 }
@@ -171,6 +172,7 @@ export async function handleRequest(req, res) {
   if (!originAllowed(req)) return json(res, 403, { error: 'Origin not allowed.' })
   const pathname = new URL(req.url, 'http://localhost').pathname
   if (pathname.startsWith('/api/podcasts')) {
+    if(process.env.VERCEL && req.method==='POST')return json(res,503,{error:'Long audio jobs need a durable background worker. Use Study Studio podcast scripts and short audio previews for now.'})
     try {
       if (pathname === '/api/podcasts' && req.method === 'GET') return json(res, 200, { jobs: await podcastStore().list() })
       const media = pathname.match(/^\/api\/podcasts\/([a-f0-9-]{36})\/audio\/(\d+)$/)
@@ -198,11 +200,13 @@ export async function handleRequest(req, res) {
       gemini: !!(providerKeys('gemini')[0] && (process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite')),
       elevenlabs: !!(providerKeys('elevenlabs')[0] && (process.env.ELEVENLABS_VOICE_ID || 'k7nOSUCadIEwB6fdJmbw')),
       database: Boolean(process.env.DATABASE_URL),
+      longPodcastsAvailable: !process.env.VERCEL,
+      studyStudio: true,
       audioCharactersRemaining: Math.max(0, maxChars - speechCharacters),
       generationsRemaining: Math.max(0, maxGenerations - generations)
     })
   if (pathname.startsWith('/api/')) {
-    if (req.method !== 'POST' || !['/api/generate', '/api/speech', '/api/ask'].includes(pathname))
+    if (req.method !== 'POST' || !['/api/generate', '/api/speech', '/api/ask', '/api/study'].includes(pathname))
       return json(res, 404, { error: 'Unknown endpoint' })
     if (!req.headers['content-type']?.startsWith('application/json')) return json(res, 415, { error: 'JSON is required' })
     if (activeRoutes.has(pathname) || Date.now() - (lastRequests.get(pathname) || 0) < 1500)
@@ -214,6 +218,8 @@ export async function handleRequest(req, res) {
       if (!data || typeof data !== 'object' || Array.isArray(data)) return json(res, 400, { error: 'A JSON object is required' })
       const result = await (pathname === '/api/speech'
         ? speech(data)
+        : pathname === '/api/study'
+          ? generations >= maxGenerations ? {status:429,error:'Study generation allowance reached.'} : (generations++,createStudy(data))
         : pathname === '/api/ask'
           ? generations >= maxGenerations
             ? Promise.resolve({ status: 429, error: 'Gemini demo allowance reached.' })

@@ -14,7 +14,7 @@ import VideoLibrary from './VideoLibrary'
 import DiscoveryLab from './DiscoveryLab'
 import Community, { CommunityFeed, TiltCard } from './Community'
 import { DetailDialog, SceneBoundary, Tutor } from './Experience'
-const SpaceScene = lazy(() => import('./SpaceScene'))
+import AdaptiveScene from './AdaptiveScene'
 
 type Lang = 'en' | 'ur'
 type DemoTab = 'tutor' | 'feed' | 'school' | 'studio'
@@ -108,7 +108,7 @@ function App() {
 
     <main>
       <section className="hero cosmic-hero">
-        <SceneBoundary><Suspense fallback={<div className="scene-fallback"/>}><SpaceScene paused={paused || !!reduced}/></Suspense></SceneBoundary>
+        <SceneBoundary><AdaptiveScene paused={paused || !!reduced}/></SceneBoundary>
         <button className="motion-toggle" onClick={()=>setPaused(!paused)} aria-pressed={paused}>{isUrdu?(paused?'حرکت چلائیں':'حرکت روکیں'):(paused?'Resume orbit':'Pause orbit')}</button>
         <div className="cosmic-vignette"/>
         <div className="hero-grid shell">
